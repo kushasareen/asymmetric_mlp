@@ -3,6 +3,7 @@ import numpy as np
 import torch.nn as nn
 import pytorch_lightning as pl
 import torch.nn.functional as F
+from torch.optim.optimizer import Optimizer
 import torchmetrics.regression
 import torchvision
 import torchmetrics
@@ -60,23 +61,28 @@ class asymMLP(MLP):
 
     def normalize_weights(self):
         # normalize the weight matrix column-wise
-        for layer in self.model:
-            if isinstance(layer, nn.Linear):
+        for i in range(len(self.model) - 1):
+            layer = self.model[i]
+            next_layer = self.model[i+1]
+            if isinstance(layer, nn.Linear) and isinstance(next_layer, nn.ReLU):
                 norms = torch.linalg.norm(layer.weight, axis = 1)
                 layer.weight = nn.Parameter((layer.weight / norms[:,None]))
 
-    def on_after_backward(self):
+    def on_before_zero_grad(self, optimizer: Optimizer):
         self.normalize_weights()
-        return super().on_after_backward()  
-
+        return super().on_before_zero_grad(optimizer)
+    
 if __name__ == "__main__":
     M = asymMLP(input_dim=1, output_dim=1, hidden_dim=8, depth=1)
-    for layer in M.model:
-            if isinstance(layer, nn.Linear):
+    
+    for i in range(len(M.model) - 1):
+            layer = M.model[i]
+            next_layer = M.model[i+1]
+            if isinstance(layer, nn.Linear) and isinstance(next_layer, nn.ReLU):
                 norms = torch.linalg.norm(layer.weight, axis = 1)
                 print()
                 print("Weights shape: ", layer.weight.shape, ", norms shape: ", norms.shape)
                 layer.weight = nn.Parameter((layer.weight / norms[:,None]))
-                print("Norms before normalization", norms)
-                print("Norms after normalization", torch.linalg.norm(layer.weight, axis = 1))
+                # print("Norms before normalization", norms)
+                # print("Norms after normalization", torch.linalg.norm(layer.weight, axis = 1))
                 print()
