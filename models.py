@@ -53,13 +53,23 @@ class MLP(pl.LightningModule):
         self.log('valid_acc', self.accuracy, prog_bar=True, on_step=False, on_epoch=True)
 
 class asymMLP(MLP):
-    def training_step(self, batch, batch_idx):
+    def __init__(self, input_dim, output_dim, hidden_dim=32, depth=1, task="regression"):
+        super().__init__(input_dim, output_dim, hidden_dim, depth, task)
+        self.normalize_weights()
+
+
+    def normalize_weights(self):
         # normalize the weight matrix column-wise
         for layer in self.model:
             if isinstance(layer, nn.Linear):
                 norms = torch.linalg.norm(layer.weight, axis = 1)
                 layer.weight = nn.Parameter((layer.weight / norms[:,None]))
-                
+
+    def on_after_backward(self):
+        self.normalize_weights()
+        return super().on_after_backward()
+
+    def training_step(self, batch, batch_idx):
         return super().training_step(batch, batch_idx)
     
 
