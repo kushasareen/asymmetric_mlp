@@ -67,11 +67,7 @@ class asymMLP(MLP):
 
     def on_after_backward(self):
         self.normalize_weights()
-        return super().on_after_backward()
-
-    def training_step(self, batch, batch_idx):
-        return super().training_step(batch, batch_idx)
-    
+        return super().on_after_backward()  
 
 if __name__ == "__main__":
     M = asymMLP(input_dim=1, output_dim=1, hidden_dim=8, depth=1)
