@@ -56,11 +56,18 @@ class MLP(pl.LightningModule):
 class asymMLP(MLP):
 
     def initialize_weights(self):
-        pass
+        for i in range(1, len(self.model) - 1):
+            prev_layer = self.model[i-1]
+            layer = self.model[i]
+            next_layer = self.model[i+1]
+            if isinstance(layer, nn.ReLU) and isinstance(next_layer, nn.Linear) and isinstance(prev_layer, nn.Linear):
+                norms = torch.linalg.norm(next_layer.weight, axis = 1)
+                next_layer.weight = nn.Parameter((next_layer.weight / norms[:,None])) # normalize columns
+                prev_layer.weight = nn.Parameter((prev_layer.weight.T / norms).T) #  normalize rows
 
     def __init__(self, input_dim, output_dim, hidden_dim=32, depth=1, task="regression"):
         super().__init__(input_dim, output_dim, hidden_dim, depth, task)
-        self.normalize_weights()
+        self.initialize_weights()
 
     def normalize_weights(self):
         # normalize the weight matrix column-wise
@@ -77,15 +84,21 @@ class asymMLP(MLP):
     
 if __name__ == "__main__":
     M = asymMLP(input_dim=1, output_dim=1, hidden_dim=8, depth=1)
+
     
-    for i in range(len(M.model) - 1):
-            layer = M.model[i]
-            next_layer = M.model[i+1]
-            if isinstance(layer, nn.Linear) and isinstance(next_layer, nn.ReLU):
-                norms = torch.linalg.norm(layer.weight, axis = 1)
-                print()
-                print("Weights shape: ", layer.weight.shape, ", norms shape: ", norms.shape)
-                layer.weight = nn.Parameter((layer.weight / norms[:,None]))
-                # print("Norms before normalization", norms)
-                # print("Norms after normalization", torch.linalg.norm(layer.weight, axis = 1))
-                print()
+    for i in range(1, len(M.model) - 1):
+        prev_layer = M.model[i-1]
+        layer = M.model[i]
+        next_layer = M.model[i+1]
+        if isinstance(layer, nn.ReLU) and isinstance(next_layer, nn.Linear) and isinstance(prev_layer, nn.Linear):
+            print("prev", prev_layer.weight.shape)
+            print("next", next_layer.weight.shape)
+
+            norms = torch.linalg.norm(next_layer.weight, axis = 1)
+            next_layer.weight = nn.Parameter((next_layer.weight / norms[:,None])) # normalize columns
+            prev_layer.weight = nn.Parameter((prev_layer.weight.T / norms).T) #  normalize rows
+            
+            print("after norm prev", prev_layer.weight.shape)
+            print("after norm next", next_layer.weight.shape)
+
+

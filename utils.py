@@ -45,6 +45,4 @@ def eval(model, valid_loader):
 if __name__ == '__main__':
     (t, y) = generate_noisy_data(linear, 100, 2, m = -1, b = 1)
     plt.scatter(t, y)
-    # plt.show()
-
-    print(torch.stack((t,y), dim = -1))
+    plt.show()
