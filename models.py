@@ -54,10 +54,13 @@ class MLP(pl.LightningModule):
         self.log('valid_acc', self.accuracy, prog_bar=True, on_step=False, on_epoch=True)
 
 class asymMLP(MLP):
+
+    def initialize_weights(self):
+        pass
+
     def __init__(self, input_dim, output_dim, hidden_dim=32, depth=1, task="regression"):
         super().__init__(input_dim, output_dim, hidden_dim, depth, task)
         self.normalize_weights()
-
 
     def normalize_weights(self):
         # normalize the weight matrix column-wise
