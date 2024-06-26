@@ -37,7 +37,7 @@ class MLP(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         z = self.forward(x)
-        loss = self.loss(z, y.flatten().float())
+        loss = self.loss(z.flatten().float(), y.flatten().float())
         self.log("train_loss", loss, prog_bar=True, on_step=False, on_epoch=True)
         return loss
 
@@ -48,7 +48,7 @@ class MLP(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         x, y = batch
         z = self.forward(x)
-        val_loss = self.loss(z, y.flatten().float())
+        val_loss = self.loss(z.flatten().float(), y.flatten().float())
 
         self.log("val_loss", val_loss, prog_bar=True, on_step=False, on_epoch=True)
         self.log('valid_acc', self.accuracy, prog_bar=True, on_step=False, on_epoch=True)

@@ -26,6 +26,21 @@ class ToyDataset(torch.utils.data.Dataset):
     
     def __getitem__(self, idx):
         return self.t[idx], self.y[idx]
+    
+def eval(model, valid_loader):
+    total_preds, true_preds = 0,0
+    with torch.no_grad():
+        for x,y in valid_loader:
+            preds = model.forward(x)
+            pred_idx = torch.argmax(preds)
+            y_idx = torch.argmax(y)
+
+            total_preds += 1
+            if y_idx == pred_idx:
+                true_preds += 1
+        
+    acc = true_preds / total_preds
+    print(acc)
 
 if __name__ == '__main__':
     (t, y) = generate_noisy_data(linear, 100, 2, m = -1, b = 1)
